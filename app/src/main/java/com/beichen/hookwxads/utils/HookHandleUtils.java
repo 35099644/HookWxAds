@@ -36,9 +36,14 @@ public class HookHandleUtils {
                 in.close();
 
                 // 同样在ajax脚本中也可以拦截其它请求数据
-                //if(url.search("/mp/getappmsgext?f=json&mock=")){if("undefined"!=typeof resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[];}}
-                //obj.success&&obj.success(resp);
-                ret = ret.replace("obj.success&&obj.success(resp);", "if(url.search(\"/mp/getappmsgext?f=json&mock=\")){if(\"undefined\"!=typeof resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[];}}obj.success&&obj.success(resp);");
+                // if(url.search("/mp/getappmsgext?f=json&mock=")){if("undefined"!=typeof resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[];}}
+                // 这里拦截是视频广告由于没有什么返回类型为json因此需要执行eval函数,执行完替换后还应该还原为字符串
+                // if(url.search("/mp/ad_video?")){resp = eval("(" + resp + ")");if(resp.video_ad_item_list){resp.video_ad_item_list=[];resp = JSON.stringify(resp);}}
+                // obj.success&&obj.success(resp);
+                ret = ret.replace("obj.success&&obj.success(resp);",
+                        "if(url.search(\"/mp/getappmsgext?f=json&mock=\")&&resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[]; \"undefined\" != typeof JSAPI && JSAPI.log && JSAPI.log(JSON.stringify(resp));}" +
+//                 "if(url.search(\"/mp/ad_video?\")){resp = eval(\"(\" + resp + \")\");if(resp.video_ad_item_list){resp.video_ad_item_list=[];resp = JSON.stringify(resp);}}" +
+                            "obj.success&&obj.success(resp);");
                 InputStream is = new ByteArrayInputStream(ret.getBytes());
                 if (is == null){return null;}
                 if (TextUtils.isEmpty(encoding)){encoding = "utf-8";}

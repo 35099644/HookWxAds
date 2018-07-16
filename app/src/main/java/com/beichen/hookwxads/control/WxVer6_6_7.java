@@ -11,6 +11,8 @@ public class WxVer6_6_7 extends WxVerBase {
     @Override
     protected void initX5WebViewAds() {
         cls_name_WebViewClient = "com.tencent.mm.plugin.webview.ui.tools.WebViewUI$i";
+        field_name_WebViewUI = "pZJ";
+        field_name_WebView = "mhH";
         fun_name_shouldInterceptRequest = "a";
         cls_name_shouldInterceptRequest_arg0 = "com.tencent.xweb.WebView";
         cls_name_shouldInterceptRequest_arg1 = "com.tencent.xweb.l";
@@ -21,6 +23,8 @@ public class WxVer6_6_7 extends WxVerBase {
         field_name_RR_mInputStream = "mInputStream";
         fun_name_onLoadResource = "f";
         cls_name_onLoadResource_arg0 = cls_name_shouldInterceptRequest_arg0;
+        fun_name_onPageFinished = "a";
+        cls_name_onPageFinished_arg0 = cls_name_shouldInterceptRequest_arg0;
 
     }
 

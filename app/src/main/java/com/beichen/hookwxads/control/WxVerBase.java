@@ -10,6 +10,17 @@ public abstract class WxVerBase {
      * 微信X5浏览器内核对应WebViewClient的一个接口类
      */
     public String cls_name_WebViewClient;
+
+    /**
+     * 微信 WebViewClient 封装类对应的外部 WebViewUI字段名
+     */
+    public String field_name_WebViewUI;
+
+    /**
+     * 在外部类中的字段名
+     */
+    public String field_name_WebView;
+
     /**
      * X5内核WebViewClient类中对应 shouldInterceptRequest 的方法名
      */
@@ -62,13 +73,26 @@ public abstract class WxVerBase {
     public Class<?> cls_onLoadResource_arg1 = String.class;
 
     /**
+     * 微信 WebViewClient 封装类 onPageFinished 方法名
+     */
+    public String fun_name_onPageFinished;
+
+    /**
+     * 微信 WebViewClient 封装类 onPageFinished 参数0类名
+     */
+    public String cls_name_onPageFinished_arg0;
+
+
+    /**
      * 微信X5内核WebView下载ajax脚本地址的关键字,更新应该不是很频繁
      */
     public String filterX5WebViewAdsJsStr = "/mmbizwap/zh_CN/htmledition/js/biz_wap/utils/ajax3d3b85.js";
 
     public String filterX5WebViewAdsKeywords0 = "/mp/getappmsgext?f=json&mock=";
 
-
+    /**
+     * 微信日志类名
+     */
     public String cls_name_Log;
 
     /**
