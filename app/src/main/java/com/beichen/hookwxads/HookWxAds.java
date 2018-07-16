@@ -22,6 +22,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class HookWxAds implements IXposedHookLoadPackage {
     private static final String TAG = "HookWxAds";
     private static WxVerBase wx;
+    private JSBridge bridge = new JSBridge();
 
     @Details (clsName = "com.tencent.mm.ui.widget.MMWebView", fieldName = "com.tencent.mm.plugin.webview.ui.tools.WebViewUI.mhH")
     private Object webView;
@@ -57,16 +58,6 @@ public class HookWxAds implements IXposedHookLoadPackage {
                         if (param.args.length == 2){                        // onPageFinished
                             // 获取webview实例,并注入对象
                             Log.w(TAG, "onPageFinished 方法被调用");
-                            Field field = cls_WVC_subclass.getDeclaredField(wx.field_name_WebViewUI);
-                            field.setAccessible(true);
-                            Object obj = field.get(param.thisObject);
-                            Field webviewField = obj.getClass().getDeclaredField(wx.field_name_WebView);
-                            webviewField.setAccessible(true);
-                            webView = webviewField.get(obj);
-                            Method aJIMethod = webView.getClass().getMethod("addJavascriptInterface", Object.class, String.class);
-                            aJIMethod.setAccessible(true);
-                            aJIMethod.invoke(webView, new JSBridge(), "JSAPI");     // 这里注入时机没选好,应该在ant方法中注入
-                            Log.w(TAG, "注入JSAPI对象成功");
                         }else if (param.args.length == 3){                  // shouldInterceptRequest
                             Object args_1 = param.args[1];
                             Uri uri = (Uri) getUrlMethod.invoke(args_1);
@@ -82,10 +73,25 @@ public class HookWxAds implements IXposedHookLoadPackage {
                         }
                     }
                 }
+
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    String name = param.method.getName();
+                    if (name.equals("ant")){
+                        Field webviewField = param.thisObject.getClass().getDeclaredField("mhH");
+                        webviewField.setAccessible(true);
+                        webView = webviewField.get(param.thisObject);
+                        Method aJIMethod = webView.getClass().getMethod("addJavascriptInterface", Object.class, String.class);
+                        aJIMethod.setAccessible(true);
+                        aJIMethod.invoke(webView, bridge, "MYJSAPI");     // 这里注入时机没选好,应该在ant方法中注入
+                        Log.w(TAG, "注入JSAPI对象成功");
+                    }
+                }
             };
             XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_shouldInterceptRequest, cls_sIR_arg0, cls_sIR_arg1, wx.cls_shouldInterceptRequest_arg2, callback);
             XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_onLoadResource, cls_oLR_arg0, wx.cls_onLoadResource_arg1, callback);
             XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_onPageFinished, cls_oPF_arg0, String.class, callback);
+            XposedHelpers.findAndHookMethod("com.tencent.mm.plugin.webview.ui.tools.WebViewUI", loader, "ant", callback);
         }catch (Throwable e){
             XposedBridge.log(e);
             Log.e(TAG, "Hook X5内核WebView广告失败", e);

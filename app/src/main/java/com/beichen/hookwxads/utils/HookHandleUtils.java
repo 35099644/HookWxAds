@@ -41,9 +41,17 @@ public class HookHandleUtils {
                 // if(url.search("/mp/ad_video?")){resp = eval("(" + resp + ")");if(resp.video_ad_item_list){resp.video_ad_item_list=[];resp = JSON.stringify(resp);}}
                 // obj.success&&obj.success(resp);
                 ret = ret.replace("obj.success&&obj.success(resp);",
-                        "if(url.search(\"/mp/getappmsgext?f=json&mock=\")&&resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[]; \"undefined\" != typeof JSAPI && JSAPI.log && JSAPI.log(JSON.stringify(resp));}" +
-//                 "if(url.search(\"/mp/ad_video?\")){resp = eval(\"(\" + resp + \")\");if(resp.video_ad_item_list){resp.video_ad_item_list=[];resp = JSON.stringify(resp);}}" +
-                            "obj.success&&obj.success(resp);");
+//                        "if(url.match(\"/mp/getappmsgext\\?f=json&mock=\") && \"undefined\" != typeof resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[]; \"undefined\" != typeof MYJSAPI && MYJSAPI.log && MYJSAPI.log(\"过滤留言广告\" + JSON.stringify(resp));}\n" +
+                            "if(url.match(\"/mp/ad_video\\?uin\")){\n" +
+                                    "\"undefined\" != typeof MYJSAPI && MYJSAPI.log && MYJSAPI.log(\"resp \" + resp), MYJSAPI.log(\"addr \" + url);\n" +
+                                    "responseText = eval(\"(\" + resp + \")\");\n" +
+                                    "if(\"undefined\" != typeof responseText.video_ad_item_list){\n" +
+                                    "responseText.video_ad_item_list = [];\n" +
+                                    "\"undefined\" != typeof MYJSAPI && MYJSAPI.log && MYJSAPI.log(\"过滤视频广告\" + JSON.stringify(responseText));\n" +
+                                    "resp = JSON.stringify(responseText);\n" +
+                                    "}\n" +
+                                    "}\n" +
+                        "obj.success&&obj.success(resp);");
                 InputStream is = new ByteArrayInputStream(ret.getBytes());
                 if (is == null){return null;}
                 if (TextUtils.isEmpty(encoding)){encoding = "utf-8";}
