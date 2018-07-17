@@ -1,12 +1,12 @@
 package com.beichen.hookwxads;
 
 import android.net.Uri;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.beichen.hookwxads.control.WxVer6_6_7;
 import com.beichen.hookwxads.control.WxVerBase;
-import com.beichen.hookwxads.utils.Details;
+import com.beichen.hookwxads.utils.Details6_6_7;
 import com.beichen.hookwxads.utils.HookHandleUtils;
 import com.beichen.hookwxads.utils.JSBridge;
 
@@ -24,7 +24,7 @@ public class HookWxAds implements IXposedHookLoadPackage {
     private static WxVerBase wx;
     private JSBridge bridge = new JSBridge();
 
-    @Details (clsName = "com.tencent.mm.ui.widget.MMWebView", fieldName = "com.tencent.mm.plugin.webview.ui.tools.WebViewUI.mhH")
+    @Details6_6_7(clsName = "com.tencent.mm.ui.widget.MMWebView")
     private Object webView;
 
     @Override
@@ -33,7 +33,7 @@ public class HookWxAds implements IXposedHookLoadPackage {
             return;
         }
         Log.d(TAG, "开始Hook微信屏蔽广告");
-        wx = new WxVer6_6_7();
+        wx = new WxVerBase(HookHandleUtils.readWxSettings("wx_ver"));   // 这里在同步操作
         hookLog(loadPackageParam.classLoader);
         x5WebviewAds(loadPackageParam.classLoader);
 
@@ -77,8 +77,8 @@ public class HookWxAds implements IXposedHookLoadPackage {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     String name = param.method.getName();
-                    if (name.equals("ant")){
-                        Field webviewField = param.thisObject.getClass().getDeclaredField("mhH");
+                    if (name.equals(wx.fun_name_InjectObject)){
+                        Field webviewField = param.thisObject.getClass().getDeclaredField(wx.field_name_WebView);
                         webviewField.setAccessible(true);
                         webView = webviewField.get(param.thisObject);
                         Method aJIMethod = webView.getClass().getMethod("addJavascriptInterface", Object.class, String.class);
@@ -88,10 +88,10 @@ public class HookWxAds implements IXposedHookLoadPackage {
                     }
                 }
             };
-            XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_shouldInterceptRequest, cls_sIR_arg0, cls_sIR_arg1, wx.cls_shouldInterceptRequest_arg2, callback);
-            XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_onLoadResource, cls_oLR_arg0, wx.cls_onLoadResource_arg1, callback);
+            XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_shouldInterceptRequest, cls_sIR_arg0, cls_sIR_arg1, Bundle.class, callback);
+            XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_onLoadResource, cls_oLR_arg0, String.class, callback);
             XposedHelpers.findAndHookMethod(cls_WVC_subclass, wx.fun_name_onPageFinished, cls_oPF_arg0, String.class, callback);
-            XposedHelpers.findAndHookMethod("com.tencent.mm.plugin.webview.ui.tools.WebViewUI", loader, "ant", callback);
+            XposedHelpers.findAndHookMethod(wx.cls_name_WebViewUI, loader, wx.fun_name_InjectObject, callback);
         }catch (Throwable e){
             XposedBridge.log(e);
             Log.e(TAG, "Hook X5内核WebView广告失败", e);

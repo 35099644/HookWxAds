@@ -1,13 +1,25 @@
 package com.beichen.hookwxads.utils;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -59,5 +71,111 @@ public class HookHandleUtils {
             Log.e(TAG, "拦截失败", e);
         }
         return null;
+    }
+
+
+    /** 获取微信版本号,用于多版本匹配
+     * @param context
+     * @return
+     */
+    public static String getWXVerName(Context context){
+        try {
+            return context.getPackageManager().getPackageInfo("com.tencent.mm", 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "获取版本失败", e);
+        }
+        return null;
+    }
+
+    /** 写入配置文件,这里写入时覆盖的,因此json必须是完整的
+     * @param object
+     */
+    public static void saveWxSettings(JSONObject object){
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            Log.e(TAG, "没有正确挂载SD卡,无法读写数据");
+            return;
+        }
+        File file = new File(Environment.getExternalStorageDirectory(), "beichen_settings");
+        try {
+            FileWriter fw = new FileWriter(file);
+            fw.write(object.toString());
+            fw.close();
+        } catch (IOException e) {
+            Log.e(TAG, "写入配置文件 beichen_settings 失败", e);
+        }
+    }
+
+    public static String readWxSettings(String key){
+        JSONObject jsonObject = readWxSettings();
+        if (jsonObject == null){    // 为空可能没有配置文件或读取出错,都可以尝试写入
+            jsonObject = new JSONObject();
+        }
+        return jsonObject.optString(key);
+    }
+
+
+    public static JSONObject readWxSettings(){
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            Log.e(TAG, "没有正确挂载SD卡,无法读写数据");
+            return null;
+        }
+        File file = new File(Environment.getExternalStorageDirectory(), "beichen_settings");
+        if (!file.exists()){
+            return new JSONObject();
+        }
+        if (file.exists() && !file.isFile()){
+            file.delete();
+            return new JSONObject();
+        }
+        BufferedReader br = null;
+        FileInputStream fis = null;
+        StringBuilder sb = new StringBuilder();
+        try {
+            String line = "";
+            fis = new FileInputStream(file);
+            br = new BufferedReader(new InputStreamReader(fis));
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            fis.close();
+            br.close();
+        }catch (Exception e) {
+            try {
+                if (fis != null) fis.close();
+                if (br != null) br.close();
+            } catch (Exception e2) {
+                Log.e(TAG, "读取配置文件 beichen_settings 失败", e2);
+            }
+        }
+        if (sb.toString().isEmpty()){
+            return null;
+        }else {
+            try {
+                return new JSONObject(sb.toString());
+            } catch (JSONException e) {
+                Log.e(TAG, "读取配置文件 beichen_settings 失败", e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param obj   WxVerBase 对象实例
+     * @param cls   要获取的注解类
+     */
+    public static void initSetting(Object obj, Class<? extends Annotation> cls){
+        Field[] fields = obj.getClass().getDeclaredFields();
+        try {
+            for (Field field : fields){
+                Annotation annotation = field.getAnnotation(cls);;
+                if (annotation != null){
+                    String value = (String) annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
+                    Log.e(TAG, "当前字段: " + field.getName() + " 设置value: " + value);
+                    field.set(obj, value);
+                }
+            }
+        }catch (Throwable e){
+            Log.e(TAG, "修改值失败", e);
+        }
     }
 }
