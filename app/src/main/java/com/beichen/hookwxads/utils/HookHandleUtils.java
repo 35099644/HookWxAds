@@ -35,22 +35,16 @@ public class HookHandleUtils {
                 br.close();
                 in.close();
 
-                // 同样在ajax脚本中也可以拦截其它请求数据
-                // if(url.search("/mp/getappmsgext?f=json&mock=")){if("undefined"!=typeof resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[];}}
+                // 同样在ajax脚本中也可以拦截其它请求数据, 这里 MYJSAPI对象直接注入,因此不判断是否存在了
+                // if(url.search('/mp/getappmsgext\\?f=json&mock=') == 0){ if("undefined" != typeof resp.advertisement_num){ resp.advertisement_num = 0, resp.advertisement_info = []; MYJSAPI.log('留言广告修改后: ' + JSON.stringify(resp));}}
                 // 这里拦截是视频广告由于没有什么返回类型为json因此需要执行eval函数,执行完替换后还应该还原为字符串
-                // if(url.search("/mp/ad_video?")){resp = eval("(" + resp + ")");if(resp.video_ad_item_list){resp.video_ad_item_list=[];resp = JSON.stringify(resp);}}
+                // if(url.search('/mp/ad_video\\?uin') == 0){ responseText = eval("(" + resp + ")"); if("undefined" != typeof responseText.video_ad_item_list){responseText.video_ad_item_list = [];resp = JSON.stringify(responseText); MYJSAPI.log('视频广告修改后: ' + resp);}}
                 // obj.success&&obj.success(resp);
                 ret = ret.replace("obj.success&&obj.success(resp);",
-//                        "if(url.match(\"/mp/getappmsgext\\?f=json&mock=\") && \"undefined\" != typeof resp.advertisement_num){resp.advertisement_num=0,resp.advertisement_info=[]; \"undefined\" != typeof MYJSAPI && MYJSAPI.log && MYJSAPI.log(\"过滤留言广告\" + JSON.stringify(resp));}\n" +
-                            "if(url.match(\"/mp/ad_video\\?uin\")){\n" +
-                                    "\"undefined\" != typeof MYJSAPI && MYJSAPI.log && MYJSAPI.log(\"resp \" + resp), MYJSAPI.log(\"addr \" + url);\n" +
-                                    "responseText = eval(\"(\" + resp + \")\");\n" +
-                                    "if(\"undefined\" != typeof responseText.video_ad_item_list){\n" +
-                                    "responseText.video_ad_item_list = [];\n" +
-                                    "\"undefined\" != typeof MYJSAPI && MYJSAPI.log && MYJSAPI.log(\"过滤视频广告\" + JSON.stringify(responseText));\n" +
-                                    "resp = JSON.stringify(responseText);\n" +
-                                    "}\n" +
-                                    "}\n" +
+                        "try{" +
+                                "if(url.search('/mp/getappmsgext\\\\?f=json&mock=') == 0){ if(\"undefined\" != typeof resp.advertisement_num){ resp.advertisement_num = 0, resp.advertisement_info = []; MYJSAPI.log('留言广告修改后: ' + JSON.stringify(resp));}}" +
+                                "if(url.search('/mp/ad_video\\\\?uin') == 0){ responseText = eval(\"(\" + resp + \")\"); if(\"undefined\" != typeof responseText.video_ad_item_list){responseText.video_ad_item_list = [];resp = JSON.stringify(responseText); MYJSAPI.log('视频广告修改后: ' + resp);}}" +
+                                "}catch(err){ " + "MYJSAPI.log && MYJSAPI.log('修改错误: ' + err.message);}" +
                         "obj.success&&obj.success(resp);");
                 InputStream is = new ByteArrayInputStream(ret.getBytes());
                 if (is == null){return null;}
