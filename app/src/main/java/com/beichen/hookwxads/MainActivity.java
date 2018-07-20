@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Toast;
 
-import com.beichen.hookwxads.control.WxVerBase;
 import com.beichen.hookwxads.utils.HookHandleUtils;
 
 import org.json.JSONException;

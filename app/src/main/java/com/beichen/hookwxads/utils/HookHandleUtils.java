@@ -17,9 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -159,23 +157,5 @@ public class HookHandleUtils {
         return null;
     }
 
-    /**
-     * @param obj   WxVerBase 对象实例
-     * @param cls   要获取的注解类
-     */
-    public static void initSetting(Object obj, Class<? extends Annotation> cls){
-        Field[] fields = obj.getClass().getDeclaredFields();
-        try {
-            for (Field field : fields){
-                Annotation annotation = field.getAnnotation(cls);;
-                if (annotation != null){
-                    String value = (String) annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
-                    Log.e(TAG, "当前字段: " + field.getName() + " 设置value: " + value);
-                    field.set(obj, value);
-                }
-            }
-        }catch (Throwable e){
-            Log.e(TAG, "修改值失败", e);
-        }
-    }
+
 }
